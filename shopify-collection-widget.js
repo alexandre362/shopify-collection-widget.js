@@ -4,8 +4,10 @@ const CONFIG = {
   collectionHandle: 'ambers-design',
   
   // GESTION DEVISES
-  enableCurrencyConversion: false,    // ← Mettez à true
+  enableCurrencyConversion: false,    // ← FALSE (pas de conversion)
+  useMsrpMetafield: true,             // ← NOUVEAU : utiliser le metafield MSRP
+  msrpMetafieldKey: 'msrp_amber_s_design', // ← Le key du metafield
   sourceCurrency: 'CHF',
   targetCurrency: 'USD',
-  exchangeRate: 1.08,                // ← Mettez le taux actuel (XE.com)
+  exchangeRate: 1.08,
 };
