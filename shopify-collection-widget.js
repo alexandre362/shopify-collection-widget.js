@@ -4,7 +4,7 @@ const CONFIG = {
   collectionHandle: 'ambers-design',
   
   // GESTION DEVISES
-  enableCurrencyConversion: true,    // ← Mettez à true
+  enableCurrencyConversion: false,    // ← Mettez à true
   sourceCurrency: 'CHF',
   targetCurrency: 'USD',
   exchangeRate: 1.08,                // ← Mettez le taux actuel (XE.com)
