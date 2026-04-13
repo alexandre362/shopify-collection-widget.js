@@ -2,14 +2,6 @@ const CONFIG = {
   storeUrl: 'https://charriol-geneve.myshopify.com',
   accessToken: 'b54f4f45a4e83458cd38eb0b5e15fc85',
   collectionHandle: 'ambers-design',
-  
-  // GESTION DEVISES
-  enableCurrencyConversion: false,
-  useMsrpMetafield: true,
-  msrpMetafieldKey: 'msrp_amber_s_design',
-  sourceCurrency: 'CHF',
-  targetCurrency: 'USD',
-  exchangeRate: 1.08,
 };
 
 (function() {
@@ -35,13 +27,9 @@ const CONFIG = {
                     node {
                       id
                       title
-                      price
                       image {
                         url
                         altText
-                      }
-                      metafield(namespace: "custom", key: "${CONFIG.msrpMetafieldKey}") {
-                        value
                       }
                     }
                   }
@@ -77,28 +65,6 @@ const CONFIG = {
     }
   }
 
-  // Formatter le prix
-  function formatPrice(price, currency = 'USD') {
-    if (CONFIG.useMsrpMetafield && currency === 'USD') {
-      return `$${parseFloat(price).toFixed(2)}`;
-    }
-    return `${currency} ${parseFloat(price).toFixed(2)}`;
-  }
-
-  // Obtenir le prix à afficher (MSRP si disponible, sinon prix normal)
-  function getDisplayPrice(variant) {
-    if (CONFIG.useMsrpMetafield && variant.metafield?.value) {
-      return formatPrice(variant.metafield.value, 'USD');
-    }
-    
-    if (CONFIG.enableCurrencyConversion) {
-      const convertedPrice = parseFloat(variant.price) * CONFIG.exchangeRate;
-      return formatPrice(convertedPrice, CONFIG.targetCurrency);
-    }
-    
-    return formatPrice(variant.price, CONFIG.sourceCurrency);
-  }
-
   // Créer le widget HTML
   function renderWidget(products) {
     const container = document.getElementById('shopify-collection-widget');
@@ -117,7 +83,6 @@ const CONFIG = {
 
         const image = product.featuredImage || variant.image;
         const imageUrl = image?.url || 'https://via.placeholder.com/300';
-        const displayPrice = getDisplayPrice(variant);
 
         html += `
           <div class="product-card">
@@ -127,10 +92,6 @@ const CONFIG = {
             <div class="product-info">
               <h3 class="product-title">${product.title}</h3>
               <p class="product-variant">${variant.title}</p>
-              <p class="product-price">${displayPrice}</p>
-              <button class="add-to-cart-btn" data-variant-id="${variant.id}">
-                Ajouter au panier
-              </button>
             </div>
           </div>
         `;
@@ -142,57 +103,8 @@ const CONFIG = {
     html += '</div>';
     container.innerHTML = html;
 
-    // Ajouter les écouteurs pour le panier
-    container.querySelectorAll('.add-to-cart-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const variantId = e.target.dataset.variantId;
-        addToCart(variantId);
-      });
-    });
-
     // Ajouter les styles
     addStyles();
-  }
-
-  // Ajouter au panier
-  async function addToCart(variantId) {
-    try {
-      const cartQuery = `
-        mutation {
-          checkoutCreate(input: {
-            lineItems: [{ variantId: "${variantId}", quantity: 1 }]
-          }) {
-            checkout {
-              webUrl
-            }
-            checkoutUserErrors {
-              message
-            }
-          }
-        }
-      `;
-
-      const response = await fetch(STOREFRONT_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Shopify-Storefront-Access-Token': CONFIG.accessToken,
-        },
-        body: JSON.stringify({ query: cartQuery }),
-      });
-
-      const data = await response.json();
-      const checkoutUrl = data.data?.checkoutCreate?.checkout?.webUrl;
-
-      if (checkoutUrl) {
-        window.location.href = checkoutUrl;
-      } else {
-        alert('Erreur lors de l\'ajout au panier');
-      }
-    } catch (error) {
-      console.error('Cart Error:', error);
-      alert('Erreur : ' + error.message);
-    }
   }
 
   // Ajouter les styles CSS
@@ -253,37 +165,9 @@ const CONFIG = {
       }
 
       .product-variant {
-        margin: 0 0 10px 0;
+        margin: 0;
         font-size: 12px;
         color: #999;
-      }
-
-      .product-price {
-        margin: 10px 0;
-        font-size: 18px;
-        font-weight: bold;
-        color: #0066cc;
-      }
-
-      .add-to-cart-btn {
-        width: 100%;
-        padding: 10px;
-        background: #0066cc;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background 0.2s;
-      }
-
-      .add-to-cart-btn:hover {
-        background: #0052a3;
-      }
-
-      .add-to-cart-btn:active {
-        opacity: 0.9;
       }
     `;
 
